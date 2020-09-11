@@ -86,9 +86,23 @@ contract SupplyChain {
         _;
     }
 
-    // modifier sold
-    // modifier shipped
-    // modifier received
+    modifier sold(uint256 sku) {
+        require(items[sku].state == State.Sold, "Item has not been sold");
+        _;
+    }
+
+    modifier shipped(uint256 sku) {
+        require(items[sku].state == State.Shipped, "Item has not been shipped");
+        _;
+    }
+
+    modifier received(uint256 sku) {
+        require(
+            items[sku].state == State.Received,
+            "Item has not been received"
+        );
+        _;
+    }
 
     constructor() public {
         /* Here, set the owner as the person who instantiated the contract
@@ -136,11 +150,27 @@ contract SupplyChain {
 
     /* Add 2 modifiers to check if the item is sold already, and that the person calling this function
   is the seller. Change the state of the item to shipped. Remember to call the event associated with this function!*/
-    function shipItem(uint256 sku) public {}
+    function shipItem(uint256 sku)
+        public
+        sold(sku)
+        verifyCaller(items[sku].seller)
+    {
+        Item storage item = items[sku];
+        item.state = State.Shipped;
+        emit LogShipped(sku);
+    }
 
     /* Add 2 modifiers to check if the item is shipped already, and that the person calling this function
   is the buyer. Change the state of the item to received. Remember to call the event associated with this function!*/
-    function receiveItem(uint256 sku) public {}
+    function receiveItem(uint256 sku)
+        public
+        shipped(sku)
+        verifyCaller(items[sku].buyer)
+    {
+        Item storage item = items[sku];
+        item.state = State.Received;
+        emit LogReceived(sku);
+    }
 
     /* We have these functions completed so we can run tests, just ignore it :) */
     function fetchItem(uint256 _sku)
